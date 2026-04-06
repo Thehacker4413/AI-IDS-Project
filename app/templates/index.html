@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-IDS Premium Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css?v=2">
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <nav class="sidebar glass-panel">
+            <div class="logo">
+                <div class="icon-pulse"><i class="fa-solid fa-shield-virus"></i></div>
+                <h2>AI-IDS Core</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-target="overview"><i class="fa-solid fa-chart-line"></i> Overview</li>
+                <li class="nav-item" data-target="manual"><i class="fa-solid fa-terminal"></i> Manual Entry</li>
+                <li class="nav-item" data-target="batch"><i class="fa-solid fa-file-csv"></i> Batch Analysis</li>
+                <li class="nav-item" data-target="realtime"><i class="fa-solid fa-tower-broadcast"></i> Live Stream</li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar glass-panel flex-between">
+                <div>
+                    <h1 id="page-title">System Overview</h1>
+                    <p class="subtitle">Real-time network security monitoring</p>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot green-pulse"></span> <span id="status-text">System Active</span>
+                </div>
+            </header>
+
+            <!-- OVERVIEW TAB -->
+            <section id="overview" class="tab-content active">
+                <div class="grid-3 stats-container">
+                    <div class="stat-card glass-panel fade-in">
+                        <i class="fa-solid fa-brain text-blue mb-1"></i>
+                        <h3>Active Model</h3>
+                        <p class="stat-value text-blue" id="overview-model-name">Loading...</p>
+                        <span class="trend">Accuracy: <span id="overview-accuracy">--%</span></span>
+                    </div>
+                    <div class="stat-card glass-panel fade-in delay-1">
+                        <i class="fa-solid fa-bug text-red mb-1"></i>
+                        <h3>Threats Detected</h3>
+                        <p class="stat-value text-red" id="threat-count">58,630</p>
+                        <span class="trend">+12% today</span>
+                    </div>
+                    <div class="stat-card glass-panel fade-in delay-2">
+                        <i class="fa-solid fa-network-wired text-green mb-1"></i>
+                        <h3>Traffic Processed</h3>
+                        <p class="stat-value text-green" id="traffic-count">148.5K</p>
+                        <span class="trend">Packets</span>
+                    </div>
+                </div>
+                
+                <div class="grid-2 mt-4 map-chart-container">
+                    <div class="glass-panel p-4 chart-wrapper fade-in delay-3">
+                        <h3 class="section-title mb-2">Attack Distribution</h3>
+                        <div style="position: relative; height: 250px; width: 100%;">
+                            <canvas id="attackPieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-4 list-wrapper fade-in delay-4">
+                        <h3 class="section-title">Recent Threats</h3>
+                        <ul class="threat-list" id="recent-threats-list">
+                            <li><span class="badge bad-dos">DoS</span> <span class="threat-ip">192.168.1.105</span> - <span class="time">Just now</span></li>
+                            <li><span class="badge bad-probe">Probe</span> <span class="threat-ip">10.0.0.5</span> - <span class="time">2 mins ago</span></li>
+                            <li><span class="badge bad-u2r">U2R</span> <span class="threat-ip">172.16.0.40</span> - <span class="time">15 mins ago</span></li>
+                            <li><span class="badge bad-r2l">R2L</span> <span class="threat-ip">192.168.1.99</span> - <span class="time">1 hour ago</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MANUAL ENTRY TAB -->
+            <section id="manual" class="tab-content">
+                <div class="glass-panel p-4 fade-in">
+                    <h3 class="section-title mb-2">Predict Single Connection</h3>
+                    <p class="text-sm mb-4">Input feature values for rapid evaluation. Unspecified fields will default to 0.</p>
+                    <form id="manual-form" class="grid-3 gap-3">
+                        {% for feature in features %}
+                        <div class="input-group">
+                            <label>{{ feature }}</label>
+                            <input type="text" name="{{ feature }}" placeholder="Value..." required>
+                        </div>
+                        {% endfor %}
+                    </form>
+                    <button class="btn-primary mt-4" id="btn-manual-predict"><i class="fa-solid fa-bolt"></i> Evaluate Connection</button>
+                    
+                    <div id="manual-result" class="mt-4 hidden p-4 glass-subpanel result-banner">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- BATCH UPLOAD TAB -->
+            <section id="batch" class="tab-content">
+                <div class="glass-panel p-5 text-center fade-in upload-box">
+                    <i class="fa-solid fa-cloud-arrow-up upload-icon text-blue"></i>
+                    <h3 class="section-title mt-3">Upload CSV Dataset</h3>
+                    <p class="mb-4">Select a .csv or .txt file containing NSL-KDD formatted raw features to batch evaluate rows.</p>
+                    <input type="file" id="batch-file" accept=".csv, .txt" class="hidden">
+                    <label for="batch-file" class="btn-secondary"><i class="fa-solid fa-folder-open"></i> Browse Files</label>
+                    <div id="file-name" class="mt-2 text-sm text-gray"></div>
+                    <button class="btn-primary mt-4" id="btn-batch-upload" disabled><i class="fa-solid fa-play"></i> Process Batch</button>
+                </div>
+                
+                <div id="batch-results" class="mt-4 hidden glass-panel p-4 fade-in">
+                    <h3 class="section-title mb-3">Batch Processing Results</h3>
+                    <div class="grid-2 mb-4">
+                        <div>
+                            <p><strong>Total Rows:</strong> <span id="batch-total"></span></p>
+                        </div>
+                        <div id="batch-summary-chips" class="flex-wrap">
+                            <!-- Chips via JS -->
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="batch-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Predicted Class</th>
+                                    <th>Risk Level</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-table-body">
+                                <!-- Details via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LIVE STREAM TAB -->
+            <section id="realtime" class="tab-content">
+                <div class="glass-panel p-4 fade-in flex-between mb-4 action-bar">
+                    <div>
+                        <h3 class="section-title">Live Traffic Simulation</h3>
+                        <p class="text-sm">Interrogating live packet data and serving model inferences.</p>
+                    </div>
+                    <button class="btn-danger" id="btn-toggle-stream"><i class="fa-solid fa-play"></i> Start Stream</button>
+                </div>
+                
+                <div class="terminal-window glass-panel fade-in delay-1">
+                    <div class="terminal-header">
+                        <span class="btn-red"></span>
+                        <span class="btn-yellow"></span>
+                        <span class="btn-green"></span>
+                        <span class="title">IDS Inference Log</span>
+                    </div>
+                    <div class="terminal-body" id="live-stream-log">
+                        <div class="log-line">> Awaiting datastream initialization...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="/static/script.js?v=3"></script>
+</body>
+</html>
